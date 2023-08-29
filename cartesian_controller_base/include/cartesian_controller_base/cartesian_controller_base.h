@@ -216,8 +216,15 @@ class CartesianControllerBase : public controller_interface::ControllerInterface
 
     realtime_tools::RealtimePublisherSharedPtr<geometry_msgs::msg::PoseStamped>
       m_feedback_pose_publisher;
+    
     realtime_tools::RealtimePublisherSharedPtr<geometry_msgs::msg::TwistStamped>
       m_feedback_twist_publisher;
+    
+    realtime_tools::RealtimePublisherSharedPtr<geometry_msgs::msg::WrenchStamped>
+      m_control_force_publisher;
+    
+    realtime_tools::RealtimePublisherSharedPtr<geometry_msgs::msg::WrenchStamped>
+      m_net_force_publisher;
 
     std::vector<std::string> m_cmd_interface_types;
     std::vector<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> m_joint_cmd_pos_handles;

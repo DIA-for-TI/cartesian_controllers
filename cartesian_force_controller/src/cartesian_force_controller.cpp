@@ -177,7 +177,7 @@ ctrl::Vector6D CartesianForceController::computeForceError()
 
   // Superimpose target wrench and sensor wrench in base frame
 #if defined CARTESIAN_CONTROLLERS_GALACTIC || defined CARTESIAN_CONTROLLERS_HUMBLE
-  return Base::displayInBaseLink(m_ft_sensor_wrench,m_new_ft_sensor_ref) + target_wrench;
+  return 0.3 * Base::displayInBaseLink(m_ft_sensor_wrench,m_new_ft_sensor_ref) + target_wrench;
 #elif defined CARTESIAN_CONTROLLERS_FOXY
   return m_ft_sensor_wrench + target_wrench;
 #endif

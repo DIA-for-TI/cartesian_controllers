@@ -72,6 +72,7 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn Cartes
   auto_declare<double>("stiffness.rot_x", default_rot_stiff);
   auto_declare<double>("stiffness.rot_y", default_rot_stiff);
   auto_declare<double>("stiffness.rot_z", default_rot_stiff);
+  auto_declare<double>("net_force_scale", 0.8);
 
   return TYPE::SUCCESS;
 }
@@ -191,7 +192,8 @@ ctrl::Vector6D CartesianComplianceController::computeComplianceError()
     // Sensor and target force in base orientation
     + ForceBase::computeForceError();
 
-  return net_force;
+
+  return get_node()->get_parameter("net_force_scale").as_double() * net_force;
 }
 
 } // namespace

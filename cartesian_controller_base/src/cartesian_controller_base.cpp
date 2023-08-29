@@ -269,6 +269,16 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn Cartes
     std::make_shared<realtime_tools::RealtimePublisher<geometry_msgs::msg::TwistStamped> >(
       get_node()->create_publisher<geometry_msgs::msg::TwistStamped>(
         std::string(get_node()->get_name()) + "/current_twist", 3));
+  
+  m_control_force_publisher =
+    std::make_shared<realtime_tools::RealtimePublisher<geometry_msgs::msg::WrenchStamped> >(
+      get_node()->create_publisher<geometry_msgs::msg::WrenchStamped>(
+        std::string(get_node()->get_name()) + "/control_force", 3));
+  
+  m_net_force_publisher =
+    std::make_shared<realtime_tools::RealtimePublisher<geometry_msgs::msg::WrenchStamped> >(
+      get_node()->create_publisher<geometry_msgs::msg::WrenchStamped>(
+        std::string(get_node()->get_name()) + "/net_force", 3));
 
   m_configured = true;
 
@@ -423,6 +433,34 @@ void CartesianControllerBase::computeJointControlCmds(const ctrl::Vector6D& erro
   // PD controlled system input
   m_error_scale = get_node()->get_parameter("solver.error_scale").as_double();
   m_cartesian_input = m_error_scale * m_spatial_controller(error,period);
+
+  // TODO publish m_cartesian_input
+
+  if (m_net_force_publisher->trylock()){
+    m_net_force_publisher->msg_.header.stamp = get_node()->now();
+    m_net_force_publisher->msg_.header.frame_id = m_robot_base_link;
+    m_net_force_publisher->msg_.wrench.force.x = error[0];
+    m_net_force_publisher->msg_.wrench.force.y = error[1];
+    m_net_force_publisher->msg_.wrench.force.z = error[2];
+    m_net_force_publisher->msg_.wrench.torque.x = error[3];
+    m_net_force_publisher->msg_.wrench.torque.y = error[4];
+    m_net_force_publisher->msg_.wrench.torque.z = error[5];
+
+    m_net_force_publisher->unlockAndPublish();
+  }
+
+  if (m_control_force_publisher->trylock()){
+    m_control_force_publisher->msg_.header.stamp = get_node()->now();
+    m_control_force_publisher->msg_.header.frame_id = m_robot_base_link;
+    m_control_force_publisher->msg_.wrench.force.x = m_cartesian_input[0];
+    m_control_force_publisher->msg_.wrench.force.y = m_cartesian_input[1];
+    m_control_force_publisher->msg_.wrench.force.z = m_cartesian_input[2];
+    m_control_force_publisher->msg_.wrench.torque.x = m_cartesian_input[3];
+    m_control_force_publisher->msg_.wrench.torque.y = m_cartesian_input[4];
+    m_control_force_publisher->msg_.wrench.torque.z = m_cartesian_input[5];
+
+    m_control_force_publisher->unlockAndPublish();
+  }
 
   // Simulate one step forward
   m_simulated_joint_motion = m_ik_solver->getJointControlCmds(
